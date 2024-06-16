@@ -7,14 +7,12 @@ program patchwork
   implicit none
 
   integer :: b, i, j, h, m, n, nblocks, bs, ms, ns, ncell
-  integer :: cursor_i, cursor_j
+  integer :: cursor_i, cursor_j, file_line
   character(8), parameter :: real_form = '(e20.10)'
   character(49), parameter :: mesh_dim = "(' I= ',i3,', J= ',i3,', K= 1, ZONETYPE=Ordered')"
-  integer :: n_tiles
-  real(8), allocatable, dimension(:) :: x1, y1, y2, y_line_1, y_line_2, y_line_3
+  real(8), allocatable, dimension(:) :: x1, y1, y2, y_line_1, y_line_2, y_line_3, x_line_1, x_line_2
   real(8) :: weight_1, weight_2
-  real(8), parameter :: axis = 0d0
-  integer :: hs, conn_nj, conn_ni, loca_nj
+  integer :: conn_nj, conn_ni, loca_nj
   type(Block_Type), allocatable, dimension(:) :: blk
   type(Point_Type) :: point_1, point_2
 
@@ -48,8 +46,15 @@ program patchwork
           read(10,*) blk(b)%tile(m,n)%sx
           read(10,*) blk(b)%tile(m,n)%sy
 
-          read(10,*) blk(b)%tile(m,n)%smooth
-          if ( blk(b)%tile(m,n)%smooth == 'yes' ) then
+          read(10,*) blk(b)%tile(m,n)%i_str_smooth
+          if ( blk(b)%tile(m,n)%i_str_smooth == 'yes' ) then
+            read(10,*) blk(b)%tile(m,n)%dx_s
+            read(10,*) blk(b)%tile(m,n)%sx_s
+            read(10,*) blk(b)%tile(m,n)%j_st_ism, blk(b)%tile(m,n)%j_end_ism
+          end if
+
+          read(10,*) blk(b)%tile(m,n)%j_str_smooth
+          if ( blk(b)%tile(m,n)%j_str_smooth == 'yes' ) then
             read(10,*) blk(b)%tile(m,n)%dy_s
             read(10,*) blk(b)%tile(m,n)%sy_s
             read(10,*) blk(b)%tile(m,n)%s_f
@@ -94,16 +99,53 @@ program patchwork
     do n = 1, blk(b)%n
       do m = 1, blk(b)%m
 
-        do j = 1, blk(b)%tile(m,n)%nj+1
+        if ( blk(b)%tile(m,n)%i_str_smooth /= 'yes' ) then
 
-          blk(b)%tile(m,n)%x(:,j) = &
-          stretch ( start = blk(b)%tile(m,n)%xp_low(1),                &
-                    end   = blk(b)%tile(m,n)%xp_low(                   &
-                                           blk(b)%tile(m,n)%np_low),   &
-                    n     = blk(b)%tile(m,n)%ni+1,                     &
-                    dir   = blk(b)%tile(m,n)%sx,                       &
-                    delta = blk(b)%tile(m,n)%dx ) 
-        end do
+          do j = 1, blk(b)%tile(m,n)%nj+1
+
+            blk(b)%tile(m,n)%x(:,j) = &
+            stretch ( start = blk(b)%tile(m,n)%xp_low(1),   &
+                      end   = blk(b)%tile(m,n)%xp_low(      &
+                              blk(b)%tile(m,n)%np_low),     &
+                      n     = blk(b)%tile(m,n)%ni+1,        &
+                      dir   = blk(b)%tile(m,n)%sx,          &
+                      delta = blk(b)%tile(m,n)%dx ) 
+          end do
+
+        elseif ( blk(b)%tile(m,n)%i_str_smooth == 'yes' ) then
+            
+          allocate( x_line_1( blk(b)%tile(m,n)%ni+1 ) )
+          allocate( x_line_2( blk(b)%tile(m,n)%ni+1 ) )
+          
+          do j = 1, blk(b)%tile(m,n)%nj+1
+
+            x_line_1 = stretch ( start = blk(b)%tile(m,n)%xp_low(1),  &
+                                 end   = blk(b)%tile(m,n)%xp_low(     &
+                                         blk(b)%tile(m,n)%np_low),    &
+                                 n     = blk(b)%tile(m,n)%ni+1,       &
+                                 dir   = blk(b)%tile(m,n)%sx,         &
+                                 delta = blk(b)%tile(m,n)%dx ) 
+
+            x_line_2 = stretch ( start = blk(b)%tile(m,n)%xp_low(1),  &
+                                 end   = blk(b)%tile(m,n)%xp_low(     &
+                                         blk(b)%tile(m,n)%np_low),    &
+                                 n     = blk(b)%tile(m,n)%ni+1,       &
+                                 dir   = blk(b)%tile(m,n)%sx_s,       &
+                                 delta = blk(b)%tile(m,n)%dx_s ) 
+            
+            weight_1 = float ( ( j - blk(b)%tile(m,n)%j_st_ism ) ) / &
+                       float ( blk(b)%tile(m,n)%j_end_ism - blk(b)%tile(m,n)%j_st_ism ) 
+            weight_1 = 2d0*weight_1**3 - 3d0*weight_1**2 + 1d0
+            if ( j < blk(b)%tile(m,n)%j_st_ism  ) weight_1 = 1d0
+            if ( j > blk(b)%tile(m,n)%j_end_ism ) weight_1 = 0d0
+            weight_2 = 1d0 - weight_1
+            blk(b)%tile(m,n)%x(:,j) = x_line_1 * weight_1 + x_line_2 * weight_2
+
+          end do
+
+          deallocate( x_line_1, x_line_2 )
+
+        end if
       
       end do
     end do
@@ -140,7 +182,7 @@ program patchwork
           call cubic( point_1%x, point_1%y, point_2%x, point_2%y, x1, y2 )
         end if
 
-        if ( blk(b)%tile(m,n)%smooth /= 'yes' ) then
+        if ( blk(b)%tile(m,n)%j_str_smooth /= 'yes' ) then
     
           do i = 1, blk(b)%tile(m,n)%ni + 1
 
@@ -152,7 +194,7 @@ program patchwork
                       delta = blk(b)%tile(m,n)%dy )
           end do
     
-        elseif ( blk(b)%tile(m,n)%smooth=='yes' .and. blk(b)%tile(m,n)%connect/='yes' ) then
+        elseif ( blk(b)%tile(m,n)%j_str_smooth=='yes' .and. blk(b)%tile(m,n)%connect/='yes' ) then
 
           allocate( y_line_1( blk(b)%tile(m,n)%nj+1 ) )
           allocate( y_line_2( blk(b)%tile(m,n)%nj+1 ) )
@@ -179,7 +221,7 @@ program patchwork
 
           deallocate( y_line_1, y_line_2 )
     
-        elseif ( blk(b)%tile(m,n)%smooth=='yes' .and. blk(b)%tile(m,n)%connect=='yes' ) then
+        elseif ( blk(b)%tile(m,n)%j_str_smooth=='yes' .and. blk(b)%tile(m,n)%connect=='yes' ) then
 
           allocate( y_line_1( blk(b)%tile(m,n)%nj+1 ) )
           allocate( y_line_2( blk(b)%tile(m,n)%nj+1 ) )
