@@ -1,7 +1,6 @@
-3             ! : n blocks
-7 2           ! : n tiles i and j in block 1
-2 1
-3 1
+2             ! : n blocks
+7 1           ! : n tiles i and j in block 1
+1 2           ! : n tiles i and j in block 1
 
 --------------------------------------
 >> Block 1                           |
@@ -11,9 +10,9 @@
 10            ! : ni
 48            ! : nj
 5d-6          ! : dx
-1d-1          ! : dy
+5d-6          ! : dy
 <-            ! : sx
-==            ! : sy
+->            ! : sy
 no            ! : x stretch smoothing
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
@@ -23,16 +22,16 @@ no            ! : connection
 0d0        0d0
 1.25d-3    0d0
 2             ! : npoints upper segment
-0d0        7.5d-3
-1.25d-3    7.5d-3
+0d0        12.5d-3
+1.25d-3    12.5d-3
 
 >> tile 2 1 --------------------------
 6             ! : ni
 48            ! : nj
 1d-4          ! : dx
-1d-1          ! : dy
+5d-6          ! : dy
 ->            ! : sx
-==            ! : sy
+->            ! : sy
 no            ! : x stretch smoothing
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
@@ -42,16 +41,16 @@ no            ! : connection
 1.25d-3    0d0
 2.50d-3    0d0
 2             ! : npoints upper segment
-1.25d-3    7.5d-3
-2.50d-3    7.5d-3
+1.25d-3    12.5d-3
+2.50d-3    12.5d-3
 
 >> tile 3 1 --------------------------
 20            ! : ni
 48            ! : nj
 1d-4          ! : dx
-1d-1          ! : dy
+5d-6          ! : dy
 <>            ! : sx
-==            ! : sy
+->            ! : sy
 no            ! : x stretch smoothing
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
@@ -61,16 +60,16 @@ no            ! : connection
 2.5d-3    0d0
 7.5d-3    0d0
 2             ! : npoints upper segment
-2.5d-3    7.5d-3
-7.5d-3    7.5d-3
+2.5d-3    12.5d-3
+7.5d-3    12.5d-3
 
 >> tile 4 1 --------------------------
 20            ! : ni
 48            ! : nj
 1d-4          ! : dx
-3d-3          ! : dy
+5d-6          ! : dy
 <>            ! : sx
-==            ! : sy
+->            ! : sy
 no            ! : x stretch smoothing
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
@@ -80,16 +79,16 @@ no            ! : connection
 7.5d-3    0d0
 15.d-3    0d0
 2             ! : npoints upper segment
-7.5d-3    7.5d-3
-15.d-3    7.5d-3
+7.5d-3    12.5d-3
+15.d-3    12.5d-3
 
 >> tile 5 1 --------------------------
 20            ! : ni
 48            ! : nj
 1d-4          ! : dx
-1d-3          ! : dy
+5d-6          ! : dy
 <>            ! : sx
-==            ! : sy
+->            ! : sy
 no            ! : x stretch smoothing
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
@@ -99,16 +98,16 @@ no            ! : connection
 15.d-3    0d0
 20.d-3    0d0
 2             ! : npoints upper segment
-15.d-3    7.5d-3
-20.d-3    7.5d-3
+15.d-3    12.5d-3
+20.d-3    12.5d-3
 
 >> tile 6 1 --------------------------
 32            ! : ni
 48            ! : nj
 1d-4          ! : dx
-1d-1          ! : dy
+5d-6          ! : dy
 <-            ! : sx
-==            ! : sy
+->            ! : sy
 no            ! : x stretch smoothing
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
@@ -116,170 +115,31 @@ no            ! : smoothing for upper segment
 no            ! : connection
 2             ! : npoints lower segment
 20.d-3    0d0
-36.d-3    0d0
+33.d-3    0d0
 2             ! : npoints upper segment
-20.d-3    7.5d-3
-36.d-3    7.5d-3
+20.d-3    12.5d-3
+33.d-3    12.5d-3
 
 >> tile 7 1 --------------------------
 64            ! : ni
 48            ! : nj
-4d-6          ! : dx
-1d-1          ! : dy
+5d-5          ! : dx
+5d-6          ! : dy
 ->            ! : sx
-==            ! : sy
+->            ! : sy
 yes           ! : x stretch smoothing
-1d-6
+5d-6
 ->
-1 24
-yes           ! : y stretch smoothing
-1d-6
-->
-0.5
+1 32
+no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
 no            ! : smoothing for upper segment
 no            ! : connection
 2             ! : npoints lower segment
-36.d-3    0d0
+33.d-3    0d0
 50.d-3    0d0
 2             ! : npoints upper segment
-36.d-3    7.5d-3
-50.d-3    7.5d-3
-
->> tile 1 2 --------------------------
-10            ! : ni
-48            ! : nj
-5d-6          ! : dx
-5d-6          ! : dy
-<-            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-no            ! : y stretch smoothing
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-0d0        7.5d-3
-1.25d-3    7.5d-3
-2             ! : npoints upper segment
-0d0        12.5d-3
-1.25d-3    12.5d-3
-
->> tile 2 2 --------------------------
-6             ! : ni
-48            ! : nj
-1d-4          ! : dx
-5d-6          ! : dy
-->            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-no            ! : y stretch smoothing
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-1.25d-3    7.5d-3
-2.50d-3    7.5d-3
-2             ! : npoints upper segment
-1.25d-3    12.5d-3
-2.50d-3    12.5d-3
-
->> tile 3 2 --------------------------
-20            ! : ni
-48            ! : nj
-1d-4          ! : dx
-5d-6          ! : dy
-<>            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-no            ! : y stretch smoothing
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-2.5d-3    7.5d-3
-7.5d-3    7.5d-3
-2             ! : npoints upper segment
-2.5d-3    12.5d-3
-7.5d-3    12.5d-3
-
->> tile 4 2 --------------------------
-20            ! : ni
-48            ! : nj
-1d-4          ! : dx
-5d-6          ! : dy
-<>            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-no            ! : y stretch smoothing
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-7.5d-3    7.5d-3
-15.d-3    7.5d-3
-2             ! : npoints upper segment
-7.5d-3    12.5d-3
-15.d-3    12.5d-3
-
->> tile 5 2 --------------------------
-20            ! : ni
-48            ! : nj
-1d-4          ! : dx
-5d-6          ! : dy
-<>            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-no            ! : y stretch smoothing
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-15.d-3    7.5d-3
-20.d-3    7.5d-3
-2             ! : npoints upper segment
-15.d-3    12.5d-3
-20.d-3    12.5d-3
-
->> tile 6 2 --------------------------
-32            ! : ni
-48            ! : nj
-1d-4          ! : dx
-5d-6          ! : dy
-<-            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-no            ! : y stretch smoothing
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-20.d-3    7.5d-3
-36.d-3    7.5d-3
-2             ! : npoints upper segment
-20.d-3    12.5d-3
-36.d-3    12.5d-3
-
->> tile 7 2 --------------------------
-64            ! : ni
-48            ! : nj
-1d-6          ! : dx
-5d-6          ! : dy
-->            ! : sx
-->            ! : sy
-no            ! : x stretch smoothing
-yes           ! : y stretch smoothing
-1.5d-6
-<>
-0.5
-no            ! : smoothing for lower segment
-no            ! : smoothing for upper segment
-no            ! : connection
-2             ! : npoints lower segment
-36.d-3    7.5d-3
-50.d-3    7.5d-3
-2             ! : npoints upper segment
-36.d-3    12.5d-3
+33.d-3    12.5d-3
 50.d-3    12.5d-3
 
 --------------------------------------
@@ -287,26 +147,48 @@ no            ! : connection
 --------------------------------------
 
 >> tile 1 1 --------------------------
-120           ! : ni
+32           ! : ni
 48            ! : nj
-5d-6          ! : dx
-1d-6          ! : dy
+5d-5          ! : dx
+5d-6          ! : dy
 <-            ! : sx
 ->            ! : sy
 yes           ! : x stretch smoothing
-1.5d-6
+5d-6
 <-
-1 16
+1 32
 no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
 no            ! : smoothing for upper segment
 no            ! : connection
 2             ! : npoints lower segment
 50.d-3    0d0
-75.d-3   0d0
+55.d-3    0d0
 2             ! : npoints upper segment
-50.d-3    7.5d-3
-75.d-3    7.5d-3
+50.d-3    12.5d-3
+55.d-3    12.5d-3
+
+>> tile 1 2 --------------------------
+32            ! : ni
+96            ! : nj
+5d-6          ! : dx
+5d-6          ! : dy
+<-            ! : sx
+<>            ! : sy
+yes           ! : x stretch smoothing
+5d-6
+<-
+1 32
+no           ! : y stretch smoothing
+no            ! : smoothing for lower segment
+no            ! : smoothing for upper segment
+no            ! : connection
+2             ! : npoints lower segment
+50.d-3    12.5d-3
+55.d-3    12.5d-3
+2             ! : npoints upper segment
+50.d-3    29.4d-3
+55.d-3    29.4d-3
 
 >> tile 2 1 --------------------------
 120           ! : ni
@@ -327,15 +209,15 @@ no            ! : connection
 75.d-3    0d0
 106.9d-3  0d0
 2             ! : npoints upper segment
-75.d-3    7.5d-3
-106.9d-3  7.5d-3
+75.d-3    29.4d-3
+106.9d-3  29.4d-3
 
 --------------------------------------
 >> Block 3                           |
 --------------------------------------
 
 >> tile 1 1 --------------------------
-40            ! : ni
+64            ! : ni
 156           ! : nj
 4d-5          ! : dx
 1.5d-6        ! : dy
@@ -361,7 +243,7 @@ yes           ! : connection (after: connected tile)
 1.280001E-01	1.389747E-02
 
 >> tile 2 1 --------------------------
-16             ! : ni
+32            ! : ni
 156           ! : nj
 5d-4          ! : dx
 1d-5          ! : dy
@@ -393,7 +275,7 @@ no            ! : connection (after: connected tile)
 1.454774E-01	5.450000E-03
 
 >> tile 3 1 --------------------------
-16            ! : ni
+32            ! : ni
 156           ! : nj
 5d-4          ! : dx
 1d-6          ! : dy

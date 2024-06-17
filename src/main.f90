@@ -6,12 +6,14 @@ program patchwork
   use cubic_mod
   implicit none
 
+  logical :: trapez_1, trapez_2
   integer :: b, i, j, h, m, n, nblocks, bs, ms, ns, ncell
   integer :: cursor_i, cursor_j, file_line
   character(8), parameter :: real_form = '(e20.10)'
   character(49), parameter :: mesh_dim = "(' I= ',i3,', J= ',i3,', K= 1, ZONETYPE=Ordered')"
   real(8), allocatable, dimension(:) :: x1, y1, y2, y_line_1, y_line_2, y_line_3, x_line_1, x_line_2
   real(8) :: weight_1, weight_2
+  real(8) :: lenght_loc, lenght_low, lenght_upp
   integer :: conn_nj, conn_ni, loca_nj
   type(Block_Type), allocatable, dimension(:) :: blk
   type(Point_Type) :: point_1, point_2
@@ -83,7 +85,8 @@ program patchwork
           do j = 1, blk(b)%tile(m,n)%np_upp
             read(10,*) blk(b)%tile(m,n)%xp_upp(j), blk(b)%tile(m,n)%yp_upp(j)
           end do
-
+        
+          write(*,*) '    -> done'
         end do
       end do
 
@@ -164,6 +167,7 @@ program patchwork
 
         x1 = blk(b)%tile(m,n)%x(:,1)
         call interp1( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1, y1 )
+        x1 = blk(b)%tile(m,n)%x(:,blk(b)%tile(m,n)%nj+1)
         call interp1( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1, y2 )
 
         if ( blk(b)%tile(m,n)%smooth_low == 'yes' ) then
@@ -274,6 +278,43 @@ program patchwork
   end do
 
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  !    Tile mesh building: adjust j-lines
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  do b = 1, nblocks
+    do n = 1, blk(b)%n
+      do m = 1, blk(b)%m
+
+        trapez_1 = blk(b)%tile(m,n)%xp_low(1) /= blk(b)%tile(m,n)%xp_upp(1)
+        trapez_2 = blk(b)%tile(m,n)%xp_low(blk(b)%tile(m,n)%np_low) /= &
+                   blk(b)%tile(m,n)%xp_upp(blk(b)%tile(m,n)%np_upp)
+
+        if ( .not.trapez_1 .and. .not. trapez_2 ) cycle
+
+        lenght_low = blk(b)%tile(m,n)%xp_low(blk(b)%tile(m,n)%np_low) &
+                   - blk(b)%tile(m,n)%xp_low(1)
+        lenght_upp = blk(b)%tile(m,n)%xp_upp(blk(b)%tile(m,n)%np_upp) &
+                   - blk(b)%tile(m,n)%xp_upp(1)
+                   print*, lenght_low, lenght_upp
+
+        do j = 1, blk(b)%tile(m,n)%nj + 1
+
+          weight_1 = blk(b)%tile(m,n)%y(1,blk(b)%tile(m,n)%nj+1) - blk(b)%tile(m,n)%y(1,1)
+          weight_1 = ( blk(b)%tile(m,n)%y(1,j) - blk(b)%tile(m,n)%y(1,1) ) / weight_1
+          weight_2 = 1d0 - weight_1
+          lenght_loc = weight_2 * lenght_low + weight_1 * lenght_upp     
+          blk(b)%tile(m,n)%x(:,j) = ( blk(b)%tile(m,n)%x(:,j) - blk(b)%tile(m,n)%x(1,j) ) &
+                                  / ( blk(b)%tile(m,n)%x(blk(b)%tile(m,n)%ni+1,j) &
+                                  -   blk(b)%tile(m,n)%x(1,j) ) &
+                                  * lenght_loc + blk(b)%tile(m,n)%x(1,j)
+        
+        end do
+
+      end do
+    end do
+  end do
+
+
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
   !    Block dimensions
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
   write(*,*), ' Assembling blocks'
@@ -361,5 +402,36 @@ program patchwork
     ncell = ncell + blk(b)%ni*blk(b)%nj
   end do
   write(*,*) ' Total number of cells', ncell
+
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  !    Writing the coarse mesh
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  open(10,file='mesh05.dat',status='unknown')
+  write(10,*) 'TITLE     = "Mesh"'
+  write(10,*) 'VARIABLES = "x"'
+  write(10,*) '"y"'
+
+  do b = 1, nblocks
+
+    write(10,*)'ZONE T="Block ', b,'"'
+    
+    write(10,mesh_dim) blk(b)%ni/2+1, blk(b)%nj/2+1
+    write(10,*) 'DATAPACKING=BLOCK'
+    write(10,*) 'DT=(SINGLE SINGLE)'
+
+    do j = 1, blk(b)%nj + 1, 2
+      do i = 1, blk(b)%ni + 1, 2
+        write (10,real_form) blk(b)%x(i,j)
+      end do
+    end do
+
+    do j = 1, blk(b)%nj + 1, 2
+      do i = 1, blk(b)%ni + 1, 2
+        write (10,real_form) blk(b)%y(i,j)
+      end do
+    end do
+
+  end do
+  close(10)
 
 end program patchwork

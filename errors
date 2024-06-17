@@ -1,9 +1,6 @@
-src/main.f90(9): remark #7712: This variable has not been used.   [H]
+src/main.f90(10): remark #7712: This variable has not been used.   [H]
   integer :: b, i, j, h, m, n, nblocks, bs, ms, ns, ncell
 ----------------------^
-src/main.f90(13): remark #7712: This variable has not been used.   [N_TILES]
-  integer :: n_tiles
--------------^
-src/main.f90(17): remark #7712: This variable has not been used.   [HS]
-  integer :: hs, conn_nj, conn_ni, loca_nj
--------------^
+src/main.f90(11): remark #7712: This variable has not been used.   [FILE_LINE]
+  integer :: cursor_i, cursor_j, file_line
+---------------------------------^
