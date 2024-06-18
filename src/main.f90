@@ -240,14 +240,21 @@ program patchwork
             conn_ni = blk(bs)%tile(ms,ns)%ni
             loca_nj = blk(b)%tile(m,n)%nj
 
+            ! Stretched line representative of the connected block
             y_line_1(1:conn_nj+1) = blk(bs)%tile(ms,ns)%y(conn_ni+1,:)
             y_line_3(1:conn_nj+1) = linspace(y_line_1(1), y_line_1(conn_nj+1), conn_nj+1)
             weight_1 = ( x1(i) - x1(1) ) / ( x1(size(x1)) - x1(1) )
             weight_1 = 2d0*weight_1**3 - 3d0*weight_1**2 + 1d0
             weight_1 = max( weight_1, 0d0 )
             weight_2 = 1d0 - weight_1
-            y_line_1(1:conn_nj+1) = y_line_1(1:conn_nj+1)*weight_1 + &
-                                    y_line_3(1:conn_nj+1)*weight_2
+            !y_line_1(1:conn_nj+1) = y_line_1(1:conn_nj+1)*weight_1 + &
+            !                        y_line_3(1:conn_nj+1)*weight_2
+            
+            ! Damp y_line_1 to take into account y_upp of local wall
+            y_line_1(1:conn_nj+1) = ( y_line_1(1:conn_nj+1) - y_line_1(1) ) &
+                                  * ( y2(i) - y1(i) )/( y2(1) - y1(1) )     &
+                                  + y_line_1(1)
+
 
             y_line_1(conn_nj+1:loca_nj+1) =         &
             stretch ( start = y_line_1(conn_nj+1),  &
@@ -294,7 +301,6 @@ program patchwork
                    - blk(b)%tile(m,n)%xp_low(1)
         lenght_upp = blk(b)%tile(m,n)%xp_upp(blk(b)%tile(m,n)%np_upp) &
                    - blk(b)%tile(m,n)%xp_upp(1)
-                   print*, lenght_low, lenght_upp
 
         do j = 1, blk(b)%tile(m,n)%nj + 1
 
@@ -404,9 +410,10 @@ program patchwork
   write(*,*) ' Total number of cells', ncell
 
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  !    Writing the coarse mesh
+  !    Writing the coarse meshes
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  open(10,file='mesh05.dat',status='unknown')
+  write(*,*) ' 2nd level mesh with: ', ncell/4, 'cells'
+  open(10,file='mesh2.dat',status='unknown')
   write(10,*) 'TITLE     = "Mesh"'
   write(10,*) 'VARIABLES = "x"'
   write(10,*) '"y"'
@@ -427,6 +434,35 @@ program patchwork
 
     do j = 1, blk(b)%nj + 1, 2
       do i = 1, blk(b)%ni + 1, 2
+        write (10,real_form) blk(b)%y(i,j)
+      end do
+    end do
+
+  end do
+  close(10)
+
+  write(*,*) ' 3nd level mesh with: ', ncell/16, 'cells'
+  open(10,file='mesh3.dat',status='unknown')
+  write(10,*) 'TITLE     = "Mesh"'
+  write(10,*) 'VARIABLES = "x"'
+  write(10,*) '"y"'
+
+  do b = 1, nblocks
+
+    write(10,*)'ZONE T="Block ', b,'"'
+    
+    write(10,mesh_dim) blk(b)%ni/4+1, blk(b)%nj/4+1
+    write(10,*) 'DATAPACKING=BLOCK'
+    write(10,*) 'DT=(SINGLE SINGLE)'
+
+    do j = 1, blk(b)%nj + 1, 4
+      do i = 1, blk(b)%ni + 1, 4
+        write (10,real_form) blk(b)%x(i,j)
+      end do
+    end do
+
+    do j = 1, blk(b)%nj + 1, 4
+      do i = 1, blk(b)%ni + 1, 4
         write (10,real_form) blk(b)%y(i,j)
       end do
     end do
