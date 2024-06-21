@@ -68,6 +68,11 @@ program patchwork
           read(10,*) blk(b)%tile(m,n)%connect
           if ( blk(b)%tile(m,n)%connect == 'yes' ) then
             read(10,*) blk(b)%tile(m,n)%ind_con(:)
+          elseif ( blk(b)%tile(m,n)%connect == 'blk' ) then
+            read(10,*) blk(b)%tile(m,n)%ind_con(:)
+          elseif ( blk(b)%tile(m,n)%connect /= 'no') then
+            write(*,*) ' Error in connection specification.'
+            stop
           end if
 
           ! lower boundary
@@ -225,23 +230,27 @@ program patchwork
 
           deallocate( y_line_1, y_line_2 )
     
-        elseif ( blk(b)%tile(m,n)%j_str_smooth=='yes' .and. blk(b)%tile(m,n)%connect=='yes' ) then
+        elseif ( blk(b)%tile(m,n)%connect=='yes' ) then
 
+          ! work arrays
           allocate( y_line_1( blk(b)%tile(m,n)%nj+1 ) )
           allocate( y_line_2( blk(b)%tile(m,n)%nj+1 ) )
           allocate( y_line_3( blk(b)%tile(m,n)%nj+1 ) )
 
-          do i = 1, blk(b)%tile(m,n)%ni + 1
-            ! Connect y_line_1 with other tile
-            bs = blk(b)%tile(m,n)%ind_con(1)
-            ms = blk(b)%tile(m,n)%ind_con(2)
-            ns = blk(b)%tile(m,n)%ind_con(3)
-            conn_nj = blk(bs)%tile(ms,ns)%nj
-            conn_ni = blk(bs)%tile(ms,ns)%ni
-            loca_nj = blk(b)%tile(m,n)%nj
+          ! Connection info
+          bs = blk(b)%tile(m,n)%ind_con(1)
+          js1 = blk(b)%tile(m,n)%ind_con(2)
+          js2 = blk(b)%tile(m,n)%ind_con(3)
+          j1 = blk(b)%tile(m,n)%ind_con(4)
+          j2 = blk(b)%tile(m,n)%ind_con(5)
+          conn_nj = blk(bs)%nj
+          conn_ni = blk(bs)%ni
+          loca_nj = blk(b)%tile(m,n)%nj
 
-            ! Stretched line representative of the connected block
-            y_line_1(1:conn_nj+1) = blk(bs)%tile(ms,ns)%y(conn_ni+1,:)
+          do i = 1, blk(b)%tile(m,n)%ni + 1
+            
+            ! Discretized line from connected block
+            y_line_1(j1:j2+1) = blk(bs)%y(conn_ni+1,:)
             y_line_3(1:conn_nj+1) = linspace(y_line_1(1), y_line_1(conn_nj+1), conn_nj+1)
             weight_1 = ( x1(i) - x1(1) ) / ( x1(size(x1)) - x1(1) )
             weight_1 = 2d0*weight_1**3 - 3d0*weight_1**2 + 1d0
@@ -249,8 +258,8 @@ program patchwork
             weight_2 = 1d0 - weight_1
             !y_line_1(1:conn_nj+1) = y_line_1(1:conn_nj+1)*weight_1 + &
             !                        y_line_3(1:conn_nj+1)*weight_2
-            
-            ! Damp y_line_1 to take into account y_upp of local wall
+          
+            ! Reduce/enlarge y_line_1 to take into account y_upp of local wall
             y_line_1(1:conn_nj+1) = ( y_line_1(1:conn_nj+1) - y_line_1(1) ) &
                                   * ( y2(i) - y1(i) )/( y2(1) - y1(1) )     &
                                   + y_line_1(1)
@@ -263,20 +272,24 @@ program patchwork
                       dir   = blk(b)%tile(m,n)%sy,  &
                       delta = blk(b)%tile(m,n)%dy ) 
 
-            y_line_2 = stretch ( start = y1(i),                  &
-                                 end   = y2(i),                  &
-                                 n     = blk(b)%tile(m,n)%nj+1,  &
-                                 dir   = blk(b)%tile(m,n)%sy_s,  &
-                                 delta = blk(b)%tile(m,n)%dy_s ) 
+            if ( blk(b)%tile(m,n)%j_str_smooth=='yes' ) then
+ 
 
-            blk(b)%tile(m,n)%y(i,:) = y_line_1 * weight_1 + y_line_2 * weight_2
+              y_line_2 = stretch ( start = y1(i),                  &
+                                   end   = y2(i),                  &
+                                   n     = blk(b)%tile(m,n)%nj+1,  &
+                                   dir   = blk(b)%tile(m,n)%sy_s,  &
+                                   delta = blk(b)%tile(m,n)%dy_s ) 
 
-          end do
+              blk(b)%tile(m,n)%y(i,:) = y_line_1 * weight_1 + y_line_2 * weight_2
 
-          deallocate( y_line_1, y_line_2, y_line_3 )
+            end do
+
+            deallocate( y_line_1, y_line_2, y_line_3 )
+
+          end if
 
         end if
-
     
         deallocate( x1, y1, y2 )
 
