@@ -3,12 +3,13 @@ program patchwork
   use linspace_mod
   use stretching_mod
   use interp1_mod
+  use spline_mod
   use cubic_mod
   implicit none
 
   logical :: trapez_1, trapez_2
-  integer :: b, i, j, h, m, n, nblocks, bs, ms, ns, ncell
-  integer :: cursor_i, cursor_j, file_line
+  integer :: b, i, j, m, n, nblocks, bs, ncell
+  integer :: js1, js2, cursor_i, cursor_j
   character(8), parameter :: real_form = '(e20.10)'
   character(49), parameter :: mesh_dim = "(' I= ',i3,', J= ',i3,', K= 1, ZONETYPE=Ordered')"
   real(8), allocatable, dimension(:) :: x1, y1, y2, y_line_1, y_line_2, y_line_3, x_line_1, x_line_2
@@ -68,11 +69,6 @@ program patchwork
           read(10,*) blk(b)%tile(m,n)%connect
           if ( blk(b)%tile(m,n)%connect == 'yes' ) then
             read(10,*) blk(b)%tile(m,n)%ind_con(:)
-          elseif ( blk(b)%tile(m,n)%connect == 'blk' ) then
-            read(10,*) blk(b)%tile(m,n)%ind_con(:)
-          elseif ( blk(b)%tile(m,n)%connect /= 'no') then
-            write(*,*) ' Error in connection specification.'
-            stop
           end if
 
           ! lower boundary
@@ -98,6 +94,27 @@ program patchwork
     end do
 
   close(10)
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  !    Block dimensions
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  write(*,*), ' Allocating blocks.'
+  do b = 1, nblocks
+    blk(b)%ni = 0
+    blk(b)%nj = 0
+    n = 1
+    do m = 1, blk(b)%m
+      blk(b)%ni = blk(b)%ni + blk(b)%tile(m,n)%ni
+    end do
+    m = 1
+    do n = 1, blk(b)%n
+      blk(b)%nj = blk(b)%nj + blk(b)%tile(m,n)%nj
+    end do
+    write(*,*) '  Block ', b, blk(b)%ni,'x',blk(b)%nj
+    allocate( blk(b)%x(blk(b)%ni+1,blk(b)%nj+1) )
+    allocate( blk(b)%y(blk(b)%ni+1,blk(b)%nj+1) )
+  end do
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
 
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -163,18 +180,27 @@ program patchwork
   !    Tile mesh building: y discretization
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
   do b = 1, nblocks
+   
+    ! Overall block dim, to be updated after each tile
+    blk(b)%ni = 0
+    blk(b)%nj = 0
+    
     do n = 1, blk(b)%n
       do m = 1, blk(b)%m
 
         allocate( x1( blk(b)%tile(m,n)%ni+1 ) )
         allocate( y1( blk(b)%tile(m,n)%ni+1 ) )
         allocate( y2( blk(b)%tile(m,n)%ni+1 ) )
-
+        
+        ! interpolate lower and upper boundaries of the tile
         x1 = blk(b)%tile(m,n)%x(:,1)
-        call interp1( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1, y1 )
+        !call interp1( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1, y1 )
+        y1 = spline( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1 )
         x1 = blk(b)%tile(m,n)%x(:,blk(b)%tile(m,n)%nj+1)
-        call interp1( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1, y2 )
+        !call interp1( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1, y2 )
+        y2 = spline( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1 )
 
+        ! option to add a cubic transition from first to last point
         if ( blk(b)%tile(m,n)%smooth_low == 'yes' ) then
           point_1%x = x1(1)
           point_2%x = x1(size(x1))
@@ -191,8 +217,9 @@ program patchwork
           call cubic( point_1%x, point_1%y, point_2%x, point_2%y, x1, y2 )
         end if
 
-        if ( blk(b)%tile(m,n)%j_str_smooth /= 'yes' ) then
-    
+        if ( blk(b)%tile(m,n)%j_str_smooth /= 'yes' .and. &
+             blk(b)%tile(m,n)%connect /= 'yes' ) then
+
           do i = 1, blk(b)%tile(m,n)%ni + 1
 
             blk(b)%tile(m,n)%y(i,:) =                 &
@@ -203,7 +230,8 @@ program patchwork
                       delta = blk(b)%tile(m,n)%dy )
           end do
     
-        elseif ( blk(b)%tile(m,n)%j_str_smooth=='yes' .and. blk(b)%tile(m,n)%connect/='yes' ) then
+        elseif ( blk(b)%tile(m,n)%j_str_smooth == 'yes' .and. &
+                 blk(b)%tile(m,n)%connect /= 'yes' ) then
 
           allocate( y_line_1( blk(b)%tile(m,n)%nj+1 ) )
           allocate( y_line_2( blk(b)%tile(m,n)%nj+1 ) )
@@ -241,8 +269,6 @@ program patchwork
           bs = blk(b)%tile(m,n)%ind_con(1)
           js1 = blk(b)%tile(m,n)%ind_con(2)
           js2 = blk(b)%tile(m,n)%ind_con(3)
-          j1 = blk(b)%tile(m,n)%ind_con(4)
-          j2 = blk(b)%tile(m,n)%ind_con(5)
           conn_nj = blk(bs)%nj
           conn_ni = blk(bs)%ni
           loca_nj = blk(b)%tile(m,n)%nj
@@ -250,8 +276,8 @@ program patchwork
           do i = 1, blk(b)%tile(m,n)%ni + 1
             
             ! Discretized line from connected block
-            y_line_1(j1:j2+1) = blk(bs)%y(conn_ni+1,:)
-            y_line_3(1:conn_nj+1) = linspace(y_line_1(1), y_line_1(conn_nj+1), conn_nj+1)
+            y_line_1(1:loca_nj+1) = blk(bs)%y(conn_ni+1,js1:js2)
+            !y_line_3(1:conn_nj+1) = linspace(y_line_1(1), y_line_1(conn_nj+1), conn_nj+1)
             weight_1 = ( x1(i) - x1(1) ) / ( x1(size(x1)) - x1(1) )
             weight_1 = 2d0*weight_1**3 - 3d0*weight_1**2 + 1d0
             weight_1 = max( weight_1, 0d0 )
@@ -260,104 +286,68 @@ program patchwork
             !                        y_line_3(1:conn_nj+1)*weight_2
           
             ! Reduce/enlarge y_line_1 to take into account y_upp of local wall
-            y_line_1(1:conn_nj+1) = ( y_line_1(1:conn_nj+1) - y_line_1(1) ) &
-                                  * ( y2(i) - y1(i) )/( y2(1) - y1(1) )     &
+            y_line_1(1:loca_nj+1) = ( y_line_1(1:loca_nj+1) - y_line_1(1) ) &
+                                  * ( y2(i) - y1(i) )/( y2(1) - y1(1) )  &
                                   + y_line_1(1)
 
+            ! Right y-line for this tile
+            y_line_2 = stretch ( start = y1(i),                 &
+                                 end   = y2(i),                 &
+                                 n     = blk(b)%tile(m,n)%nj+1, &
+                                 dir   = blk(b)%tile(m,n)%sy,   &
+                                 delta = blk(b)%tile(m,n)%dy    ) 
 
-            y_line_1(conn_nj+1:loca_nj+1) =         &
-            stretch ( start = y_line_1(conn_nj+1),  &
-                      end   = y2(i),                &
-                      n     = loca_nj-conn_nj+1,    &
-                      dir   = blk(b)%tile(m,n)%sy,  &
-                      delta = blk(b)%tile(m,n)%dy ) 
+            ! Smoothing from left to right discretization
+            blk(b)%tile(m,n)%y(i,:) = y_line_1 * weight_1 + y_line_2 * weight_2
 
-            if ( blk(b)%tile(m,n)%j_str_smooth=='yes' ) then
- 
+          end do ! tile i-loop
 
-              y_line_2 = stretch ( start = y1(i),                  &
-                                   end   = y2(i),                  &
-                                   n     = blk(b)%tile(m,n)%nj+1,  &
-                                   dir   = blk(b)%tile(m,n)%sy_s,  &
-                                   delta = blk(b)%tile(m,n)%dy_s ) 
+          deallocate( y_line_1, y_line_2, y_line_3 )
 
-              blk(b)%tile(m,n)%y(i,:) = y_line_1 * weight_1 + y_line_2 * weight_2
-
-            end do
-
-            deallocate( y_line_1, y_line_2, y_line_3 )
-
-          end if
-
-        end if
+        end if ! standard / smoothing / connection if
     
         deallocate( x1, y1, y2 )
 
-      end do
-    end do
-  end do
-
-  ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  !    Tile mesh building: adjust j-lines
-  ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  do b = 1, nblocks
-    do n = 1, blk(b)%n
-      do m = 1, blk(b)%m
-
+        ! Adjust x-discretization for trapezoidal-shaped tiles
         trapez_1 = blk(b)%tile(m,n)%xp_low(1) /= blk(b)%tile(m,n)%xp_upp(1)
         trapez_2 = blk(b)%tile(m,n)%xp_low(blk(b)%tile(m,n)%np_low) /= &
                    blk(b)%tile(m,n)%xp_upp(blk(b)%tile(m,n)%np_upp)
 
-        if ( .not.trapez_1 .and. .not. trapez_2 ) cycle
+        if ( trapez_1 .or. trapez_2 ) then
 
-        lenght_low = blk(b)%tile(m,n)%xp_low(blk(b)%tile(m,n)%np_low) &
-                   - blk(b)%tile(m,n)%xp_low(1)
-        lenght_upp = blk(b)%tile(m,n)%xp_upp(blk(b)%tile(m,n)%np_upp) &
-                   - blk(b)%tile(m,n)%xp_upp(1)
+          lenght_low = blk(b)%tile(m,n)%xp_low(blk(b)%tile(m,n)%np_low) &
+                     - blk(b)%tile(m,n)%xp_low(1)
+          lenght_upp = blk(b)%tile(m,n)%xp_upp(blk(b)%tile(m,n)%np_upp) &
+                     - blk(b)%tile(m,n)%xp_upp(1)
 
-        do j = 1, blk(b)%tile(m,n)%nj + 1
+          do j = 1, blk(b)%tile(m,n)%nj + 1
 
-          weight_1 = blk(b)%tile(m,n)%y(1,blk(b)%tile(m,n)%nj+1) - blk(b)%tile(m,n)%y(1,1)
-          weight_1 = ( blk(b)%tile(m,n)%y(1,j) - blk(b)%tile(m,n)%y(1,1) ) / weight_1
-          weight_2 = 1d0 - weight_1
-          lenght_loc = weight_2 * lenght_low + weight_1 * lenght_upp     
-          blk(b)%tile(m,n)%x(:,j) = ( blk(b)%tile(m,n)%x(:,j) - blk(b)%tile(m,n)%x(1,j) ) &
-                                  / ( blk(b)%tile(m,n)%x(blk(b)%tile(m,n)%ni+1,j) &
-                                  -   blk(b)%tile(m,n)%x(1,j) ) &
-                                  * lenght_loc + blk(b)%tile(m,n)%x(1,j)
+            weight_1 = blk(b)%tile(m,n)%y(1,blk(b)%tile(m,n)%nj+1) - blk(b)%tile(m,n)%y(1,1)
+            weight_1 = ( blk(b)%tile(m,n)%y(1,j) - blk(b)%tile(m,n)%y(1,1) ) / weight_1
+            weight_2 = 1d0 - weight_1
+            lenght_loc = weight_2 * lenght_low + weight_1 * lenght_upp     
+            blk(b)%tile(m,n)%x(:,j) = ( blk(b)%tile(m,n)%x(:,j) - blk(b)%tile(m,n)%x(1,j) ) &
+                                    / ( blk(b)%tile(m,n)%x(blk(b)%tile(m,n)%ni+1,j) &
+                                    -   blk(b)%tile(m,n)%x(1,j) ) &
+                                    * lenght_loc + blk(b)%tile(m,n)%x(1,j)
         
-        end do
+          end do
+        
+        end if
 
-      end do
-    end do
-  end do
+        if ( n == 1 ) then
+          blk(b)%ni = blk(b)%ni + blk(b)%tile(m,n)%ni
+          write(*,*) ' Updating i-dimension of block', b, '->', blk(b)%ni
+        end if
 
+      end do ! tile m loop
 
-  ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  !    Block dimensions
-  ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  write(*,*), ' Assembling blocks'
-  do b = 1, nblocks
-    blk(b)%ni = 0
-    blk(b)%nj = 0
-    n = 1
-    do m = 1, blk(b)%m
-      blk(b)%ni = blk(b)%ni + blk(b)%tile(m,n)%ni
-    end do
-    m = 1
-    do n = 1, blk(b)%n
-      blk(b)%nj = blk(b)%nj + blk(b)%tile(m,n)%nj
-    end do
-    write(*,*) '  Block ', b, blk(b)%ni,'x',blk(b)%nj
-    allocate( blk(b)%x(blk(b)%ni+1,blk(b)%nj+1) )
-    allocate( blk(b)%y(blk(b)%ni+1,blk(b)%nj+1) )
-  end do
+      blk(b)%nj = blk(b)%nj + blk(b)%tile(1,n)%nj
+      write(*,*) ' Updating j-dimension of block', b, '->', blk(b)%nj
+    
+    end do ! tile n loop
 
-  ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  !    Block assembling
-  ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  do b = 1, nblocks
-
+    write(*,*) ' Assembling block', b
     cursor_j = 1
     do n = 1, blk(b)%n
 
@@ -375,12 +365,12 @@ program patchwork
         cursor_i = cursor_i + blk(b)%tile(m,n)%ni
 
       end do
-
       cursor_j = cursor_j + blk(b)%tile(m-1,n)%nj
 
     end do
+    write(*,*) '    -> done'
 
-  end do
+  end do ! block loop
 
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
   !    Writing the mesh

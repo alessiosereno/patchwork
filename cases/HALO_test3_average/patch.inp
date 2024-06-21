@@ -10,7 +10,7 @@
 
 >> tile 1 1 --------------------------
 64            ! : ni
-32            ! : nj
+24            ! : nj
 1d-1          ! : dx
 1d-1          ! : dy
 ==            ! : sx
@@ -29,7 +29,7 @@ no            ! : connection
 
 >> tile 2 1 --------------------------
 48            ! : ni
-32            ! : nj
+24            ! : nj
 1d-1          ! : dx
 1d-1          ! : dy
 ->            ! : sx
@@ -132,7 +132,7 @@ no            ! : connection
 
 >> tile 1 1 --------------------------
 196           ! : ni
-32            ! : nj
+24            ! : nj
 5d-1          ! : dx
 5d-1          ! : dy
 ==            ! : sx
@@ -192,21 +192,18 @@ no            ! : connection
 --------------------------------------
 
 >> tile 1 1 --------------------------
-24            ! : ni
-144           ! : nj
+48            ! : ni
+136           ! : nj
 5d-1          ! : dx
 5d-6          ! : dy
 ==            ! : sx
 ->            ! : sy
 no            ! : x stretch smoothing
-yes           ! : y stretch smoothing
-5d-6
-->
-0.5
+no            ! : y stretch smoothing
 no            ! : smoothing for lower segment
 no            ! : smoothing for upper segment
-blk           ! : connection
-3 1 1
+yes           ! : connection
+3 1 136
 2             ! : npoints lower segment
 112.5d-3	  0d0
 1.300625E-01  0d0
@@ -218,7 +215,7 @@ blk           ! : connection
 
 >> tile 2 1 --------------------------
 128           ! : ni
-144           ! : nj
+136           ! : nj
 5d-1          ! : dx
 5d-6          ! : dy
 ==            ! : sx
@@ -234,7 +231,7 @@ no            ! : connection
 2             ! : npoints lower segment
 1.300625E-01    0d0
 170.0986d-3     0d0
-29            ! : npoints upper segment
+28            ! : npoints upper segment
 1.300625E-01	1.183507E-02
 1.315059E-01	1.051571E-02
 1.330135E-01	9.364487E-03
@@ -245,7 +242,6 @@ no            ! : connection
 1.409106E-01	5.933710E-03
 1.424668E-01	5.658893E-03
 1.439914E-01	5.500706E-03
-1.454774E-01	5.450000E-03
 1.454774E-01	5.450000E-03
 1.469002E-01	5.543251E-03
 1.482986E-01	5.821409E-03
