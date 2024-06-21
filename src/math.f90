@@ -34,31 +34,30 @@
   FUNCTION LINSPACE(START,END,NUM,ENDPOINT,STEP) RESULT(SAMPLES)
         
   ! PARAMETERS
-    REAL(DP), INTENT(IN) :: START 
+    real(kind=8), INTENT(IN) :: START 
       !! The starting value of the sequence.
-    REAL(DP), INTENT(IN) :: END
+    real(kind=8), INTENT(IN) :: END
       !! The end value of the sequence, unless `endpoint` is set to `.false.`. 
       !! In that case, the sequence consists of all but the last of `num + 1` 
       !! evenly spaced samples, so that `end` is excluded. Note that the 
       !! step size changes when `endpoint` is `.false.`.
-    INTEGER, INTENT(IN), OPTIONAL :: NUM
+    INTEGER, INTENT(IN) :: NUM
       !! Number of samples to generate. Default value is 50.
     LOGICAL, INTENT(IN), OPTIONAL :: ENDPOINT
       !! If `.true.`, `end` is the last sample. Otherwise, it is not included. Default is `.true.`.
-    REAL(DP), INTENT(OUT), OPTIONAL :: STEP
+    real(kind=8), INTENT(OUT), OPTIONAL :: STEP
       !! If present, `step` is the size of spacing between samples.
 
   ! RETURNS
-    REAL(DP), ALLOCATABLE :: SAMPLES(:)
+    real(kind=8) :: SAMPLES(NUM)
       !! There are `num` equally spaced samples in the closed interval `[start, stop]` or 
       !! the half-open interval `[start, stop)` (depending on whether `endpoint` is `.true.` or `.false.`).
 
     INTEGER :: NUM_, I
     LOGICAL :: ENDPOINT_
-    REAL(DP) :: STEP_
+    real(kind=8) :: STEP_
 
-        NUM_ = 50
-        IF (PRESENT(NUM)) NUM_ = NUM
+        NUM_ = NUM
 
         ENDPOINT_ = .TRUE.
         IF (PRESENT(ENDPOINT)) ENDPOINT_ = ENDPOINT
@@ -72,7 +71,6 @@
 
         IF (PRESENT(STEP)) STEP = STEP_
 
-        ALLOCATE(SAMPLES(NUM_))
         DO I = 1, NUM_
             SAMPLES(I) = START + (I-1)*STEP_
         END DO

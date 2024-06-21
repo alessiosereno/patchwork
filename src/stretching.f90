@@ -13,15 +13,15 @@ contains
       character, optional :: Type
       character(2), optional :: dir
       integer, intent(in) :: n
-      real(dp), optional :: Par, delta, xsi, start, end
-      real(dp) :: discr(N)
+      real(kind=8), optional :: Par, delta, xsi, start, end
+      real(kind=8) :: discr(N)
       ! Local
       character :: sType
       character(2) :: sDir
       integer, parameter :: try_max = 100
       integer :: try
-      real(dp), parameter :: tol = 1d-3, zero = 0d0, uno = 1d0, half = 0.5d0, due = 2d0
-      real(dp) :: left, right, norm, delta_n, A, xs, x(N), delta_try, error, A_1, A_2, A_try, discr_try(n)
+      real(kind=8), parameter :: tol = 1d-3, zero = 0d0, uno = 1d0, half = 0.5d0, due = 2d0
+      real(kind=8) :: left, right, norm, delta_n, A, xs, x(N), delta_try, error, A_1, A_2, A_try, discr_try(n)
 
       ! Setting
       if ( .not. present( start ) .and. .not. present( end ) ) then
@@ -111,14 +111,14 @@ contains
 
       elseif ( sType == 'S' .or. sDir == '<>' .or. sDir == '><' .or. sDir == '==' ) then
 
-        if ( A > zero .or. sDir == '<>' ) then
+        if ( sDir == '==' ) then
+          discr = linspace(zero, uno, N)
+
+        elseif ( A > zero .or. sDir == '<>' ) then
           discr = ( Tanh( A * ( x - xs ) ) + Tanh( A * xs ) ) / ( Tanh( A * ( uno - xs ) ) + Tanh( A * xs ) )
 
         elseif ( A < zero .or. sDir == '><' ) then 
           discr = due * x - ( Tanh( Abs(A) * ( x - xs ) ) + Tanh ( Abs(A) * xs) ) / ( Tanh( Abs(A) * ( uno - xs ) ) + Tanh( Abs(A) * xs ) )
-        
-        elseif ( sDir == '==' ) then
-          discr = x
 
         end if
 
