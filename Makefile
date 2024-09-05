@@ -27,7 +27,7 @@
  OBJ=$(patsubst %.f90,$(OBJDIR)/%.o,$(notdir $(SRC)))
 
 # Intel Fortran Compiler flags
-FLAGS= -i4 -r8 -g -O0 -warn all -debug extended -no-save-temps -nofpp -fpe0 -double-size 64 -traceback -debug #-check 
+FLAGS= -traceback #-g -O0 -warn all -debug extended -nofpp -fpe0 -double-size 64 -traceback -debug -check 
 SETMOD=-module mod
 NOFX=-nofixed
 
