@@ -327,18 +327,26 @@ program patchwork
             weight_2 = 1d0 - weight_1
             lenght_loc = weight_2 * lenght_low + weight_1 * lenght_upp   
             
-            if ( trapez_1 ) then
+            if ( trapez_1 .and. .not. trapez_2 ) then
               blk(b)%tile(m,n)%x(:,j) = ( blk(b)%tile(m,n)%x(:,j) - blk(b)%tile(m,n)%x(1,j) ) &
                                       / ( blk(b)%tile(m,n)%x(blk(b)%tile(m,n)%ni+1,j) &
                                       -   blk(b)%tile(m,n)%x(1,j) ) &
                                       * lenght_loc + blk(b)%tile(m,n)%x(1,j) &
                                       + (lenght_low - lenght_upp) * weight_1
 
-            elseif ( trapez_2 ) then  
+            elseif ( trapez_2 .and. .not. trapez_1 ) then  
               blk(b)%tile(m,n)%x(:,j) = ( blk(b)%tile(m,n)%x(:,j) - blk(b)%tile(m,n)%x(1,j) ) &
                                       / ( blk(b)%tile(m,n)%x(blk(b)%tile(m,n)%ni+1,j) &
                                       -   blk(b)%tile(m,n)%x(1,j) ) &
                                       * lenght_loc + blk(b)%tile(m,n)%x(1,j)
+
+            elseif ( trapez_1 .and. trapez_2 ) then
+              blk(b)%tile(m,n)%x(:,j) = ( blk(b)%tile(m,n)%x(:,j) - blk(b)%tile(m,n)%x(1,j) ) &
+                                      / ( blk(b)%tile(m,n)%x(blk(b)%tile(m,n)%ni+1,j) &
+                                      -   blk(b)%tile(m,n)%x(1,j) ) &
+                                      * lenght_loc + blk(b)%tile(m,n)%x(1,j) &
+                                      + (lenght_low - lenght_upp) * weight_1 /2d0
+
             end if
         
           end do
