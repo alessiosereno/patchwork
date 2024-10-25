@@ -194,11 +194,17 @@ program patchwork
         
         ! interpolate lower and upper boundaries of the tile
         x1 = blk(b)%tile(m,n)%x(:,1)
-        !call interp1( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1, y1 )
-        y1 = spline( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1 )
+        if ( blk(b)%tile(m,n)%np_low < 5 ) then
+          call interp1( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1, y1 )
+        else
+          y1 = spline( blk(b)%tile(m,n)%xp_low, blk(b)%tile(m,n)%yp_low, x1 )
+        end if
         x1 = blk(b)%tile(m,n)%x(:,blk(b)%tile(m,n)%nj+1)
-        !call interp1( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1, y2 )
-        y2 = spline( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1 )
+        if ( blk(b)%tile(m,n)%np_upp < 5 ) then
+          call interp1( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1, y2 )
+        else
+          y2 = spline( blk(b)%tile(m,n)%xp_upp, blk(b)%tile(m,n)%yp_upp, x1 )
+        end if
 
         ! option to add a cubic transition from first to last point
         if ( blk(b)%tile(m,n)%smooth_low == 'yes' ) then
