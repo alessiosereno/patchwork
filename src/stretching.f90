@@ -69,7 +69,8 @@ contains
 
         discr_try = Tanh( A_try * x ) / Tanh( A_try )
         if ( sDir == '<>' ) &
-          discr_try = ( Tanh( A_try * ( x - xs ) ) + Tanh( A_try * xs ) ) / ( Tanh( A_try * ( uno - xs ) ) + Tanh( A_try * xs ) )
+          discr_try = ( Tanh( A_try * ( x - xs ) ) + Tanh( A_try * xs ) ) &
+                    / ( Tanh( A_try * ( uno - xs ) ) + Tanh( A_try * xs ) )
         delta_try = discr_try(n) - discr_try(n-1)
         
         try = 0
@@ -86,7 +87,8 @@ contains
           A_try = 0.5d0 * ( A_1 + A_2 )
           discr_try = Tanh( A_try * x ) / Tanh( A_try )
           if ( sDir == '<>' ) &
-            discr_try = ( Tanh( A_try * ( x - xs ) ) + Tanh( A_try * xs ) ) / ( Tanh( A_try * ( uno - xs ) ) + Tanh( A_try * xs ) )
+            discr_try = ( Tanh( A_try * ( x - xs ) ) + Tanh( A_try * xs ) ) &
+                      / ( Tanh( A_try * ( uno - xs ) ) + Tanh( A_try * xs ) )
           delta_try = discr_try(n) - discr_try(n-1)
           error = Abs( delta_try -  delta_n ) / delta_n
           try = try + 1
@@ -115,10 +117,12 @@ contains
           discr = linspace(zero, uno, N)
 
         elseif ( A > zero .or. sDir == '<>' ) then
-          discr = ( Tanh( A * ( x - xs ) ) + Tanh( A * xs ) ) / ( Tanh( A * ( uno - xs ) ) + Tanh( A * xs ) )
+          discr = ( Tanh( A * ( x - xs ) ) + Tanh( A * xs ) ) &
+                / ( Tanh( A * ( uno - xs ) ) + Tanh( A * xs ) )
 
         elseif ( A < zero .or. sDir == '><' ) then 
-          discr = due * x - ( Tanh( Abs(A) * ( x - xs ) ) + Tanh ( Abs(A) * xs) ) / ( Tanh( Abs(A) * ( uno - xs ) ) + Tanh( Abs(A) * xs ) )
+          discr = due * x - ( Tanh( Abs(A) * ( x - xs ) ) + Tanh ( Abs(A) * xs) ) &
+                          / ( Tanh( Abs(A) * ( uno - xs ) ) + Tanh( Abs(A) * xs ) )
 
         end if
 
