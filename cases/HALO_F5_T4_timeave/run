@@ -1,4 +1,0 @@
-cd ../../
-make
-cd -
-../../patchwork
