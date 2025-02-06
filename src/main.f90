@@ -15,7 +15,7 @@ program patchwork
   character(8), parameter :: real_form = '(e20.10)'
   character(49), parameter :: mesh_dim = "(' I= ',i3,', J= ',i3,', K= 1, ZONETYPE=Ordered')"
   character(len=dl) :: inputfile, OUT_Path
-  logical :: found_inputfile
+  logical :: write_coarse
   real(8), allocatable, dimension(:) :: x1, y1, y2, y_line_1, y_line_2, y_line_3, x_line_1, x_line_2
   real(8) :: weight_1, weight_2
   real(8) :: lenght_loc, lenght_low, lenght_upp
@@ -336,7 +336,7 @@ program patchwork
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
   !    Writing the mesh
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  open(10,file='mesh.dat',status='unknown')
+  open(10,file=trim(OUT_Path)//'mesh.dat',status='unknown')
   write(10,*) 'TITLE     = "Mesh"'
   write(10,*) 'VARIABLES = "x"'
   write(10,*) '"y"'
@@ -373,66 +373,68 @@ program patchwork
   end do
   write(*,*) ' Total number of cells', ncell
 
+  if (write_coarse) then
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
   !    Writing the coarse meshes
   ! - - - - - - - - - - - - - - - - - - - - - - - - -
-  write(*,*) ' 2nd level mesh with: ', ncell/4, 'cells'
-  open(10,file='mesh2.dat',status='unknown')
-  write(10,*) 'TITLE     = "Mesh"'
-  write(10,*) 'VARIABLES = "x"'
-  write(10,*) '"y"'
+    write(*,*) ' 2nd level mesh with: ', ncell/4, 'cells'
+    open(10,file=trim(OUT_Path)//'mesh2.dat',status='unknown')
+    write(10,*) 'TITLE     = "Mesh"'
+    write(10,*) 'VARIABLES = "x"'
+    write(10,*) '"y"'
 
-  do b = 1, grid%nblocks
+    do b = 1, grid%nblocks
 
-    write(10,*)'ZONE T="Block ', b,'"'
-    
-    write(10,mesh_dim)grid%blk(b)%ni/2+1,grid%blk(b)%nj/2+1
-    write(10,*) 'DATAPACKING=BLOCK'
-    write(10,*) 'DT=(SINGLE SINGLE)'
+      write(10,*)'ZONE T="Block ', b,'"'
+      
+      write(10,mesh_dim)grid%blk(b)%ni/2+1,grid%blk(b)%nj/2+1
+      write(10,*) 'DATAPACKING=BLOCK'
+      write(10,*) 'DT=(SINGLE SINGLE)'
 
-    do j = 1,grid%blk(b)%nj + 1, 2
-      do i = 1,grid%blk(b)%ni + 1, 2
-        write (10,real_form) grid%blk(b)%x(i,j)
+      do j = 1,grid%blk(b)%nj + 1, 2
+        do i = 1,grid%blk(b)%ni + 1, 2
+          write (10,real_form) grid%blk(b)%x(i,j)
+        end do
       end do
-    end do
 
-    do j = 1,grid%blk(b)%nj + 1, 2
-      do i = 1,grid%blk(b)%ni + 1, 2
-        write (10,real_form) grid%blk(b)%y(i,j)
+      do j = 1,grid%blk(b)%nj + 1, 2
+        do i = 1,grid%blk(b)%ni + 1, 2
+          write (10,real_form) grid%blk(b)%y(i,j)
+        end do
       end do
+
     end do
+    close(10)
 
-  end do
-  close(10)
+    write(*,*) ' 3nd level mesh with: ', ncell/16, 'cells'
+    open(10,file=trim(OUT_Path)//'mesh3.dat',status='unknown')
+    write(10,*) 'TITLE     = "Mesh"'
+    write(10,*) 'VARIABLES = "x"'
+    write(10,*) '"y"'
 
-  write(*,*) ' 3nd level mesh with: ', ncell/16, 'cells'
-  open(10,file='mesh3.dat',status='unknown')
-  write(10,*) 'TITLE     = "Mesh"'
-  write(10,*) 'VARIABLES = "x"'
-  write(10,*) '"y"'
+    do b = 1, grid%nblocks
 
-  do b = 1, grid%nblocks
+      write(10,*)'ZONE T="Block ', b,'"'
+      
+      write(10,mesh_dim)grid%blk(b)%ni/4+1,grid%blk(b)%nj/4+1
+      write(10,*) 'DATAPACKING=BLOCK'
+      write(10,*) 'DT=(SINGLE SINGLE)'
 
-    write(10,*)'ZONE T="Block ', b,'"'
-    
-    write(10,mesh_dim)grid%blk(b)%ni/4+1,grid%blk(b)%nj/4+1
-    write(10,*) 'DATAPACKING=BLOCK'
-    write(10,*) 'DT=(SINGLE SINGLE)'
-
-    do j = 1,grid%blk(b)%nj + 1, 4
-      do i = 1,grid%blk(b)%ni + 1, 4
-        write (10,real_form) grid%blk(b)%x(i,j)
+      do j = 1,grid%blk(b)%nj + 1, 4
+        do i = 1,grid%blk(b)%ni + 1, 4
+          write (10,real_form) grid%blk(b)%x(i,j)
+        end do
       end do
-    end do
 
-    do j = 1,grid%blk(b)%nj + 1, 4
-      do i = 1,grid%blk(b)%ni + 1, 4
-        write (10,real_form) grid%blk(b)%y(i,j)
+      do j = 1,grid%blk(b)%nj + 1, 4
+        do i = 1,grid%blk(b)%ni + 1, 4
+          write (10,real_form) grid%blk(b)%y(i,j)
+        end do
       end do
-    end do
 
-  end do
-  close(10)
+    end do
+    close(10)
+  end if
 
 contains
 
@@ -458,19 +460,13 @@ contains
     enddo
     allocate( grid%blk(1:grid%nblocks))
 
-    ! Read (if present) the global input file
-    call fini%get(section_name='PATCHWORK', option_name='inputfile', val=inputfile, error=error)
-    if (error==0) then
-      found_inputfile = .true.
-      ! Define the OUT_Path from the global input file
-      OUT_Path = extract_path(inputfile)
-    else
-      found_inputfile = .false.
-    endif
-
-    ! Direct assignement of the OUT_Path
+    ! Assignement of the OUT_Path
     call fini%get(section_name='PATCHWORK', option_name='outpath', val=OUT_Path, error=error)
     if (error/=0) OUT_Path = './'
+
+    ! Write coarse meshes
+    call fini%get(section_name='PATCHWORK', option_name='coarse-mesh', val=write_coarse, error=error)
+    if (error/=0) write_coarse = .false.
 
     ! Blocks general info
     do b = 1, grid%nblocks
