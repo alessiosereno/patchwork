@@ -118,6 +118,7 @@ while test $# -gt 0; do
       else
         BUILD=standalone
       fi
+      SETVARS=1
       ;;
 
     --compile | -c )
@@ -166,10 +167,6 @@ elif [[ $SHELL == *"bash"* ]]; then
   RCFILE=$HOME/.bashrc
 fi
 
-if [ "$SETVARS" != "0" ]; then
-  define_path $RCFILE
-fi
-
 if [ "$UPDATE" != "0" ]; then
   git submodule update --init --remote
 elif [ "$LOAD" != "0" ]; then
@@ -178,6 +175,8 @@ elif [[ "$BUILD" != "0" ]]; then
   build_project
 elif [[ "$EXE" != "0" ]]; then
   compile
+elif [ "$SETVARS" != "0" ]; then
+  define_path $RCFILE
 else
   usage
 fi
