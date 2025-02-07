@@ -45,7 +45,7 @@ function define_path () {
   rm -f .setvars.sh
 
   echo 'export PATCHWORKDIR='$DIR >> .setvars.sh
-  echo 'function patchwork () { '$DIR'/bin/patchwork; }' >> .setvars.sh
+  echo 'function patchwork () { '$DIR'/PATCHWORK.sh; }' >> .setvars.sh
   echo 'export -f patchwork' >> .setvars.sh
 
   grep -v "patchwork" $RCFILE > tmpfile && mv tmpfile $RCFILE
