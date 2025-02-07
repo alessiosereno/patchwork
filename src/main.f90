@@ -7,6 +7,7 @@ program patchwork
   use interp1_mod
   use spline_mod
   use cubic_mod
+  use Tec3D_mod
   implicit none
 
   logical :: trapez_1, trapez_2
@@ -435,6 +436,8 @@ program patchwork
     end do
     close(10)
   end if
+
+  !call Tec3D (grid) TODO fix
 
 contains
 
