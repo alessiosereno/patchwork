@@ -437,6 +437,40 @@ program patchwork
     close(10)
   end if
 
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  !    Writing the tiles-file
+  ! - - - - - - - - - - - - - - - - - - - - - - - - -
+  open(10,file=trim(OUT_Path)//'tiles.dat',status='unknown')
+  write(10,*) 'TITLE     = "Tiles"'
+  write(10,*) 'VARIABLES = "x"'
+  write(10,*) '"y"'
+
+  do b = 1, grid%nblocks
+    do m = 1, grid%blk(b)%m
+      do n = 1, grid%blk(b)%n
+
+        write(10,'(A16,I3,A6,I3,I3,A)') ' ZONE T= "Block:', b, ' Tile:', m, n, '"'
+    
+        write(10,mesh_dim) grid%blk(b)%tile(m,n)%ni+1, grid%blk(b)%tile(m,n)%nj+1
+        write(10,*) 'DATAPACKING=BLOCK'
+        write(10,*) 'DT=(SINGLE SINGLE)'
+
+        do j = 1, grid%blk(b)%tile(m,n)%nj+1
+          do i = 1, grid%blk(b)%tile(m,n)%ni+1
+            write (10,real_form) grid%blk(b)%tile(m,n)%x(i,j)
+          end do
+        end do
+
+        do j = 1, grid%blk(b)%tile(m,n)%nj+1
+          do i = 1, grid%blk(b)%tile(m,n)%ni+1
+            write (10,real_form) grid%blk(b)%tile(m,n)%y(i,j)
+          end do
+        end do
+      end do
+    end do      
+  end do
+  close(10)
+
   !call Tec3D (grid) TODO fix
 
 contains
