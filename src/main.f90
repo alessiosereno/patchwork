@@ -188,6 +188,10 @@ program patchwork
                                  delta = grid%blk(b)%tile(m,n)%dy_s ) 
 
             weight_1 = ( x1(i) - x1(1) ) / ( x1(size(x1)) - x1(1) )
+            if ( grid%blk(b)%tile(m,n)%def_jstr_sm_range ) then
+              weight_1 = ( x1(i) - grid%blk(b)%tile(m,n)%x_jstr_sm_range(1) ) &
+                       / ( grid%blk(b)%tile(m,n)%x_jstr_sm_range(2) - grid%blk(b)%tile(m,n)%x_jstr_sm_range(1) )
+            end if
             if ( weight_1<0.1 ) then
               grid%blk(b)%tile(m,n)%y(i,:) = y_line_1
             elseif ( weight_1>0.9 ) then
@@ -584,7 +588,17 @@ contains
           grid%blk(b)%tile(m,n)%j_str_smooth = ' no' ! default
           call fini%get(section_name=trim(name), &
                         option_name='dy2', val=grid%blk(b)%tile(m,n)%dy_s, error=error)
-          if (error==0) grid%blk(b)%tile(m,n)%j_str_smooth = 'yes'
+          if (error==0) then
+            grid%blk(b)%tile(m,n)%j_str_smooth = 'yes'
+            call fini%get(section_name=trim(name), &
+                          option_name='transition-x-range', &
+                          val=grid%blk(b)%tile(m,n)%x_jstr_sm_range(:), error=error)
+            if (error==0) then
+              grid%blk(b)%tile(m,n)%def_jstr_sm_range = .true.
+            else
+              grid%blk(b)%tile(m,n)%def_jstr_sm_range = .false.
+            end if
+          end if
           call fini%get(section_name=trim(name), &
                         option_name='sy2', val=grid%blk(b)%tile(m,n)%sy_s, error=error)
           if (error/=0) grid%blk(b)%tile(m,n)%sy_s = grid%blk(b)%tile(m,n)%sy
@@ -595,10 +609,10 @@ contains
           grid%blk(b)%tile(m,n)%smooth_low = ' no' ! default
           grid%blk(b)%tile(m,n)%smooth_upp = ' no' ! default
           call fini%get(section_name=trim(name), &
-                        option_name='cubic-lower-segment', val=ans, error=error)
+                        option_name='cubic-lower-profile', val=ans, error=error)
           if ((error==0) .and. (ans)) grid%blk(b)%tile(m,n)%smooth_low = 'yes'
           call fini%get(section_name=trim(name), &
-                        option_name='cubic-upper-segment', val=ans, error=error)
+                        option_name='cubic-upper-profile', val=ans, error=error)
           if ((error==0) .and. (ans)) grid%blk(b)%tile(m,n)%smooth_upp = 'yes'
 
           ! Connection

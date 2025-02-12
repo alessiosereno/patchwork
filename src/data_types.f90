@@ -8,7 +8,8 @@ module Data_Types
     character(2) :: sx, sy
     character(3) :: i_str_smooth, j_str_smooth, smooth_low, smooth_upp, connect
     character(2) :: sy_s, sx_s
-    real(R8) :: dx, dy, dx_s, dy_s, s_f
+    logical :: def_jstr_sm_range
+    real(R8) :: dx, dy, dx_s, dy_s, s_f, x_jstr_sm_range(2)
     real(R8), allocatable :: xp_low(:), yp_low(:)
     real(R8), allocatable :: xp_upp(:), yp_upp(:)
     real(R8), allocatable :: x(:,:), y(:,:)

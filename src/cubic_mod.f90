@@ -14,7 +14,6 @@ module cubic_mod
     allocate( x(size(x_eval)) )
     x = ( x_eval - x_eval(1) ) / ( x_eval(size(x_eval)) - x_eval(1) )
     if ( y1 > y2 ) then
-      print*, 'check'
       y_eval = 2d0 * x**3 - 3d0* x**2 + 1d0
     else
       y_eval = -2d0 * x**3 + 3d0* x**2
