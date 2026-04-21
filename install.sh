@@ -41,6 +41,47 @@ function usage () {
     echo
 }
 
+function require_cmd () {
+  # require_cmd <command> <hint>
+  if ! command -v "$1" &> /dev/null; then
+    echo -e "\033[0;31m-- ERROR: required command '$1' not found.\033[0m"
+    echo "   $2"
+    return 1
+  fi
+}
+
+function check_prerequisites () {
+  echo
+  echo -e "\033[0;32m-- Checking prerequisites \033[0m"
+  local missing=0
+  require_cmd git    "Install git (e.g. 'brew install git' on macOS, 'apt install git' on Debian/Ubuntu)." || missing=1
+  require_cmd cmake  "Install cmake (e.g. 'brew install cmake', 'apt install cmake')."                  || missing=1
+  require_cmd make   "Install make (Xcode Command Line Tools on macOS, 'apt install build-essential')." || missing=1
+  require_cmd python3 "Install Python 3 (e.g. 'brew install python', 'apt install python3')."           || missing=1
+
+  if command -v python3 &> /dev/null; then
+    if ! python3 -c "import venv" &> /dev/null; then
+      echo -e "\033[0;31m-- ERROR: Python 'venv' module not available.\033[0m"
+      echo "   On Debian/Ubuntu: 'apt install python3-venv'."
+      missing=1
+    fi
+  fi
+
+  if ! command -v ifx &> /dev/null && ! command -v gfortran &> /dev/null; then
+    echo -e "\033[0;31m-- ERROR: no Fortran compiler found (neither 'ifx' nor 'gfortran').\033[0m"
+    echo "   Install GNU Fortran: 'brew install gcc' on macOS, 'apt install gfortran' on Debian/Ubuntu."
+    echo "   Or install the Intel oneAPI Fortran compiler (ifx)."
+    missing=1
+  fi
+
+  if [ "$missing" -ne 0 ]; then
+    echo
+    echo -e "\033[0;31m-- Prerequisites check failed. Please install missing tools and retry.\033[0m"
+    exit 1
+  fi
+  echo -e "\033[0;32m-- All prerequisites found \033[0m"
+}
+
 function define_path () {
   rm -f .setvars.sh
 
@@ -53,8 +94,18 @@ function define_path () {
   source $RCFILE --force
 }
 
+function setup_python () {
+  echo
+  echo -e "\033[0;32m-- Setting up Python virtual environment \033[0m"
+  echo
+  python3 -m venv $DIR/.venv
+  $DIR/.venv/bin/pip install --upgrade pip
+  $DIR/.venv/bin/pip install -r $DIR/requirements.txt
+}
+
 function build_project () {
-  
+
+  check_prerequisites
   rm -rf bin build && mkdir -p build
   if [[ $BUILD == standalone ]]; then
     echo 
@@ -78,6 +129,8 @@ function build_project () {
   fi
   cmake .. -DCMAKE_Fortran_COMPILER=$FC -DCMAKE_BUILD_TYPE=RELEASE -DMASTER=$Master
   make -j
+  cd $DIR
+  setup_python
 }
 
 function compile () {
