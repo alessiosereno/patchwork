@@ -30,6 +30,9 @@ function usage () {
     echo "$PROGRAM --compile|-c <build>"
     echo "    Compile with build type (<build> = RELEASE,DEBUG,TESTING)"
     echo
+    echo "$PROGRAM --fc     |-f <compiler>"
+    echo "    Fortran compiler to use (e.g. ifx, gfortran). Default: auto-detect"
+    echo
     echo "$PROGRAM --setvars|-s "
     echo "    Set the project paths in the environment variables"
     echo
@@ -67,7 +70,12 @@ function check_prerequisites () {
     fi
   fi
 
-  if ! command -v ifx &> /dev/null && ! command -v gfortran &> /dev/null; then
+  if [ -n "$FC" ]; then
+    if ! command -v "$FC" &> /dev/null; then
+      echo -e "\033[0;31m-- ERROR: requested Fortran compiler '$FC' not found in PATH.\033[0m"
+      missing=1
+    fi
+  elif ! command -v ifx &> /dev/null && ! command -v gfortran &> /dev/null; then
     echo -e "\033[0;31m-- ERROR: no Fortran compiler found (neither 'ifx' nor 'gfortran').\033[0m"
     echo "   Install GNU Fortran: 'brew install gcc' on macOS, 'apt install gfortran' on Debian/Ubuntu."
     echo "   Or install the Intel oneAPI Fortran compiler (ifx)."
@@ -107,27 +115,21 @@ function build_project () {
 
   check_prerequisites
   rm -rf bin build && mkdir -p build
-  if [[ $BUILD == standalone ]]; then
-    echo 
-    echo -e "\033[0;32m-- Stand-alone building \033[0m"
-    echo
-    git submodule update --init --recursive
-    Master=None
-  else
-    echo
-    echo -e "\033[0;32m-- Hydra building \033[0m"
-    echo
-    Master=hydra
-  fi
+  echo
+  echo -e "\033[0;32m-- Building \033[0m"
+  echo
+  git submodule update --init --recursive
   cd $DIR/build
-  if command -v ifx &> /dev/null; then
+  if [ -n "$FC" ]; then
+      echo "Using user-specified Fortran Compiler ($FC)"
+  elif command -v ifx &> /dev/null; then
       echo "Using Intel Fortran Compiler (ifx)"
       FC=ifx
   else
       echo "Intel Fortran Compiler (ifx) not found, falling back to GNU Fortran Compiler (gfortran)"
       FC=gfortran
   fi
-  cmake .. -DCMAKE_Fortran_COMPILER=$FC -DCMAKE_BUILD_TYPE=RELEASE -DMASTER=$Master
+  cmake .. -DCMAKE_Fortran_COMPILER=$FC -DCMAKE_BUILD_TYPE=RELEASE
   make -j
   cd $DIR
   setup_python
@@ -146,6 +148,7 @@ SETVARS=0
 UPDATE=0
 LOAD=0
 BUILD=0
+FC=""
 
 # RETURN VALUES/EXIT STATUS CODES
 readonly E_BAD_OPTION=254
@@ -166,11 +169,7 @@ while test $# -gt 0; do
 
     --build | -b )
       shift
-      if (( $# > 0 )); then
-        BUILD=$1
-      else
-        BUILD=standalone
-      fi
+      BUILD=1
       SETVARS=1
       ;;
 
@@ -180,6 +179,16 @@ while test $# -gt 0; do
         TYPE="$1"
         EXE=1
       fi
+      ;;
+
+    --fc | -f )
+      shift
+      if (( $# == 0 )) || [[ "$1" == -* ]]; then
+        echo "Option --fc|-f requires a compiler name (e.g. ifx, gfortran)" >&2
+        exit $E_BAD_OPTION
+      fi
+      FC=$1
+      shift
       ;;
 
     --setvars | -s )
