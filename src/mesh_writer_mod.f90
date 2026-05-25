@@ -6,7 +6,7 @@ module mesh_writer_mod
   public :: write_mesh, write_tiles
 
   character(8),  parameter :: real_form = '(e20.10)'
-  character(49), parameter :: mesh_dim  = "(' I= ',i3,', J= ',i3,', K= 1, ZONETYPE=Ordered')"
+  character(49), parameter :: mesh_dim  = "(' I= ',i6,', J= ',i6,', K= 1, ZONETYPE=Ordered')"
 
 contains
 
